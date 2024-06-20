@@ -1,13 +1,14 @@
-// ignore_for_file: prefer_const_literals_to_create_immutables, prefer_const_constructors
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:insurance_pfe/auth/login.dart';
 import 'package:insurance_pfe/auth/signup.dart';
-import 'package:insurance_pfe/homepage.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:insurance_pfe/editProfile.dart';
 
+import 'package:insurance_pfe/homepage.dart';
+
+import 'package:insurance_pfe/views/root_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'Onboboarding/onboarding_view.dart';
 
 void main() async {
@@ -100,7 +101,9 @@ class _MyAppContentState extends State<MyAppContent> {
       routes: {
         "signup": (context) => SignUp(),
         "login": (context) => Login(),
-        "homepage": (context) => Homepage(),
+        // Remove direct routes to Homepage and EditProfile
+        //"homepage": (context) => Homepage(),
+        "editProfile": (context) => EditProfile(),
       },
     );
   }
@@ -111,7 +114,7 @@ class _MyAppContentState extends State<MyAppContent> {
     } else {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null && user.emailVerified) {
-        return Homepage();
+        return RootScreen(); // Use RootScreen for authenticated users
       } else {
         return Login();
       }

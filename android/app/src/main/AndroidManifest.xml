@@ -3,6 +3,8 @@
         android:label="ASSURANCES MAGHREBIA"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
+         <meta-data android:name="com.google.android.geo.API_KEY"
+               android:value="AIzaSyC7ckSip1a_oVGM1y7nPSWGUdTEPbkANIA"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"
