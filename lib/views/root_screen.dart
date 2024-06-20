@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:insurance_pfe/editProfile.dart';
-import 'package:insurance_pfe/homepage.dart';
+import 'package:insurance_pfe/views/editProfile.dart';
+import 'package:insurance_pfe/views/homepage.dart';
 import 'package:insurance_pfe/views/historique.dart';
-import 'package:insurance_pfe/views/nosagences.dart';
+import 'package:insurance_pfe/views/nos_agences.dart';
 
 class RootScreen extends StatefulWidget {
   @override

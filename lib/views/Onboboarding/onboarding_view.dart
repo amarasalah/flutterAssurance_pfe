@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:insurance_pfe/homepage.dart';
+import 'package:insurance_pfe/views/homepage.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';

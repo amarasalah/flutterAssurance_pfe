@@ -40,7 +40,7 @@ dependencies:
   cloud_firestore: ^5.0.1
   firebase_storage: ^12.0.1
   firebase_auth: ^5.1.0
-  # google_sign_in: ^6.1.23
+  google_sign_in: ^6.1.23
   awesome_dialog: ^3.2.1
   drop_down_list: ^0.0.6
   shared_preferences: ^2.2.3
@@ -53,6 +53,7 @@ dependencies:
   location: ^6.0.2
   flutter_polyline_points: ^2.0.0
   geocoding: ^3.0.0
+  geolocator: ^12.0.0
 
 dev_dependencies:
   flutter_test:

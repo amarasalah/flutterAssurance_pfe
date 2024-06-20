@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
-// import 'package:google_sign_in/google_sign_in.dart';
-import 'package:insurance_pfe/components/custombuttonauth.dart';
-import 'package:insurance_pfe/components/customlogoauth.dart';
-import 'package:insurance_pfe/components/textformfield.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:insurance_pfe/views/components/custombuttonauth.dart';
+import 'package:insurance_pfe/views/components/customlogoauth.dart';
+import 'package:insurance_pfe/views/components/textformfield.dart';
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -16,33 +16,123 @@ class Login extends StatefulWidget {
 class _LoginState extends State<Login> {
   TextEditingController email = TextEditingController();
   TextEditingController password = TextEditingController();
-
   GlobalKey<FormState> formState = GlobalKey<FormState>();
-
   bool isLoading = false;
-  // Future signInWithGoogle() async {
-  //   // Trigger the authentication flow
-  //   final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
-  //   if (googleUser == null) {
-  //     return;
-  //   }
+  Future<void> signInWithGoogle() async {
+    setState(() {
+      isLoading = true;
+    });
 
-  //   // Obtain the auth details from the request
-  //   final GoogleSignInAuthentication? googleAuth =
-  //       await googleUser?.authentication;
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
-  //   // Create a new credential
-  //   final credential = GoogleAuthProvider.credential(
-  //     accessToken: googleAuth?.accessToken,
-  //     idToken: googleAuth?.idToken,
-  //   );
+      if (googleUser == null) {
+        setState(() {
+          isLoading = false;
+        });
+        return; // The user canceled the sign-in
+      }
 
-  //   // Once signed in, return the UserCredential
-  //   await FirebaseAuth.instance.signInWithCredential(credential);
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+      final OAuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
 
-  //   Navigator.of(context).pushNamedAndRemoveUntil("homepage", (route) => false);
-  // }
+      await FirebaseAuth.instance.signInWithCredential(credential);
+
+      setState(() {
+        isLoading = false;
+      });
+
+      Navigator.of(context)
+          .pushNamedAndRemoveUntil("root_screen", (route) => false);
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+      showErrorDialog('Google sign-in failed. Please try again.');
+      print('Google sign-in error: $e');
+    }
+  }
+
+  void showErrorDialog(String message) {
+    AwesomeDialog(
+      context: context,
+      dialogType: DialogType.error,
+      animType: AnimType.rightSlide,
+      title: 'Error',
+      desc: message,
+    ).show();
+  }
+
+  void showSuccessDialog(String message) {
+    AwesomeDialog(
+      context: context,
+      dialogType: DialogType.success,
+      animType: AnimType.rightSlide,
+      title: 'Success',
+      desc: message,
+    ).show();
+  }
+
+  Future<void> loginUser() async {
+    if (!formState.currentState!.validate()) return;
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      UserCredential credential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email.text,
+        password: password.text,
+      );
+
+      if (credential.user != null) {
+        if (credential.user!.emailVerified) {
+          print('User is logged in and email is verified.');
+          Navigator.of(context)
+              .pushNamedAndRemoveUntil("root_screen", (route) => false);
+        } else {
+          print('User is logged in but email is not verified.');
+          showErrorDialog(
+              'Please verify your email to login. Check your inbox for the verification link.');
+        }
+      }
+
+      setState(() {
+        isLoading = false;
+      });
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+
+      String errorMessage;
+      if (e.code == 'user-not-found') {
+        errorMessage = 'No user found for that email.';
+      } else if (e.code == 'wrong-password') {
+        errorMessage = 'Wrong password provided.';
+      } else if (e.code == 'too-many-requests') {
+        errorMessage = 'Too many attempts, please try again later.';
+      } else {
+        errorMessage = 'Error: ${e.message}';
+      }
+
+      showErrorDialog(errorMessage);
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+      });
+
+      showErrorDialog('An error occurred. Please try again later.');
+      print('Login error: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,36 +204,18 @@ class _LoginState extends State<Login> {
                         InkWell(
                           onTap: () async {
                             if (email.text.isEmpty) {
-                              AwesomeDialog(
-                                context: context,
-                                dialogType: DialogType.error,
-                                animType: AnimType.rightSlide,
-                                title: 'Error',
-                                desc:
-                                    "Please enter your email address before clicking on Forgot Password",
-                              ).show();
+                              showErrorDialog(
+                                  "Please enter your email address before clicking on Forgot Password");
                               return;
                             }
 
                             try {
                               await FirebaseAuth.instance
                                   .sendPasswordResetEmail(email: email.text);
-                              AwesomeDialog(
-                                context: context,
-                                dialogType: DialogType.success,
-                                animType: AnimType.rightSlide,
-                                title: 'Success',
-                                desc:
-                                    'A password reset link has been sent to your email address. Please check your email.',
-                              ).show();
+                              showSuccessDialog(
+                                  'A password reset link has been sent to your email address. Please check your email.');
                             } catch (e) {
-                              AwesomeDialog(
-                                context: context,
-                                dialogType: DialogType.error,
-                                animType: AnimType.rightSlide,
-                                title: 'Error',
-                                desc: e.toString(),
-                              ).show();
+                              showErrorDialog(e.toString());
                             }
                           },
                           child: Container(
@@ -160,83 +232,7 @@ class _LoginState extends State<Login> {
                   ),
                   CustomButtonAuth(
                     title: "Login",
-                    onPressed: () async {
-                      if (formState.currentState!.validate()) {
-                        setState(() {
-                          isLoading = true;
-                        });
-
-                        try {
-                          final UserCredential credential = await FirebaseAuth
-                              .instance
-                              .signInWithEmailAndPassword(
-                            email: email.text,
-                            password: password.text,
-                          );
-
-                          setState(() {
-                            isLoading = false;
-                          });
-
-                          if (credential.user != null) {
-                            if (credential.user!.emailVerified) {
-                              Navigator.of(context)
-                                  .pushReplacementNamed("homepage");
-                            } else {
-                              AwesomeDialog(
-                                context: context,
-                                dialogType: DialogType.error,
-                                animType: AnimType.rightSlide,
-                                title: 'Error',
-                                desc:
-                                    'Please verify your email to login. Check your inbox for the verification link.',
-                              ).show();
-                            }
-                          } else {
-                            AwesomeDialog(
-                              context: context,
-                              dialogType: DialogType.error,
-                              animType: AnimType.rightSlide,
-                              title: 'Error',
-                              desc: 'User not found.',
-                            ).show();
-                          }
-                        } on FirebaseAuthException catch (e) {
-                          setState(() {
-                            isLoading = false;
-                          });
-
-                          String errorMessage;
-                          if (e.code == 'user-not-found') {
-                            errorMessage = 'No user found for that email.';
-                          } else if (e.code == 'wrong-password') {
-                            errorMessage = 'Wrong password provided.';
-                          } else {
-                            errorMessage = 'Error: ${e.message}';
-                          }
-
-                          AwesomeDialog(
-                            context: context,
-                            dialogType: DialogType.error,
-                            animType: AnimType.rightSlide,
-                            title: 'Error',
-                            desc: errorMessage,
-                          ).show();
-                        } catch (e) {
-                          setState(() {
-                            isLoading = false;
-                          });
-
-                          AwesomeDialog(
-                            context: context,
-                            dialogType: DialogType.error,
-                            animType: AnimType.rightSlide,
-                            title: 'Error',
-                            desc: 'An error occurred. Please try again later.',
-                          ).show();
-                        }
-                      }
-                    },
+                    onPressed: loginUser,
                   ),
                   Container(height: 20),
                   MaterialButton(
@@ -246,9 +242,7 @@ class _LoginState extends State<Login> {
                     ),
                     color: Colors.red[700],
                     textColor: Colors.white,
-                    onPressed: () {
-                      // signInWithGoogle();
-                    },
+                    onPressed: signInWithGoogle,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [

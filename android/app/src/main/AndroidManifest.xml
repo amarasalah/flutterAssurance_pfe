@@ -1,8 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <application
         android:label="ASSURANCES MAGHREBIA"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
+      
          <meta-data android:name="com.google.android.geo.API_KEY"
                android:value="AIzaSyC7ckSip1a_oVGM1y7nPSWGUdTEPbkANIA"/>
         <activity
