@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:insurance_pfe/auth/login.dart';
 import 'package:insurance_pfe/homepage.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -110,7 +111,7 @@ class _OnboardingViewState extends State<OnboardingView> {
             // same key
             if (!mounted) return;
             Navigator.pushReplacement(
-                context, MaterialPageRoute(builder: (context) => Homepage()));
+                context, MaterialPageRoute(builder: (context) => Login()));
           },
           child: const Text(
             "Get started",

@@ -5,10 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:insurance_pfe/auth/login.dart';
 import 'package:insurance_pfe/auth/signup.dart';
+import 'package:insurance_pfe/insuranceScreens/car_insurance.dart';
+import 'package:insurance_pfe/insuranceScreens/healthinsurance.dart';
+import 'package:insurance_pfe/historique.dart';
 import 'package:insurance_pfe/homepage.dart';
+import 'package:insurance_pfe/insuranceScreens/home_insurance.dart';
+import 'package:insurance_pfe/insuranceScreens/life_insurance.dart';
+import 'package:insurance_pfe/nos_agences.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'Onboboarding/onboarding_view.dart';
+import 'editProfile.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -101,6 +108,13 @@ class _MyAppContentState extends State<MyAppContent> {
         "signup": (context) => SignUp(),
         "login": (context) => Login(),
         "homepage": (context) => Homepage(),
+        "editProfile": (context) => EditProfile(),
+        "nosagences": (context) => Nosagences(),
+        "historique": (context) => HistoriqueScreen(),
+        "health": (context) => HealthInsurance(),
+        "life": (context) => LifeInsurance(),
+        "home": (context) => HomeInsurance(),
+        "car": (context) => CarInsurance(),
       },
     );
   }
