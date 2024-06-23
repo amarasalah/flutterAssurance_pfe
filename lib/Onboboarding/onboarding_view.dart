@@ -5,7 +5,7 @@ import 'package:insurance_pfe/homepage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
-import '../components/color.dart';
+import '../auth/components/color.dart';
 import 'onboarding_items.dart';
 
 class OnboardingView extends StatefulWidget {

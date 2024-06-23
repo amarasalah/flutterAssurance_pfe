@@ -1,3 +1,4 @@
+import 'dart:async'; // Add this for StreamSubscription
 import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -20,17 +21,29 @@ class _HomepageState extends State<Homepage> {
   String userProfilepic = 'https://via.placeholder.com/150';
   String userProfilename = 'Utilisateur';
   bool _isLoading = true;
-  getToken() async {
-    String? mytoken = await FirebaseMessaging.instance.getToken();
-    print("-----------------------------------------");
-    print(mytoken);
-  }
+  int _unreadNotificationsCount = 0;
+  StreamSubscription?
+      _notificationSubscription; // Add this to manage the subscription
 
   @override
   void initState() {
     super.initState();
     _fetchUserData();
     getToken();
+    _startListeningToNotifications(); // Use this method instead of the previous fetch method
+  }
+
+  @override
+  void dispose() {
+    _notificationSubscription
+        ?.cancel(); // Clean up the subscription when the widget is disposed
+    super.dispose();
+  }
+
+  getToken() async {
+    String? mytoken = await FirebaseMessaging.instance.getToken();
+    print("-----------------------------------------");
+    print(mytoken);
   }
 
   Future<void> _fetchUserData() async {
@@ -55,6 +68,22 @@ class _HomepageState extends State<Homepage> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  void _startListeningToNotifications() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      _notificationSubscription = FirebaseFirestore.instance
+          .collection('notifications')
+          .where('userId', isEqualTo: user.uid)
+          .where('isRead', isEqualTo: false)
+          .snapshots()
+          .listen((snapshot) {
+        setState(() {
+          _unreadNotificationsCount = snapshot.docs.length;
+        });
+      });
     }
   }
 
@@ -205,11 +234,39 @@ class _HomepageState extends State<Homepage> {
                   ],
                 ),
                 Spacer(),
-                IconButton(
-                  icon: Icon(Icons.notifications, color: Colors.white),
-                  onPressed: () {
-                    Navigator.of(context).pushNamed("notifications");
-                  },
+                Stack(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.notifications, color: Colors.white),
+                      onPressed: () {
+                        Navigator.of(context).pushNamed("notifications");
+                      },
+                    ),
+                    if (_unreadNotificationsCount > 0)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          constraints: BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            '$_unreadNotificationsCount',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 IconButton(
                   icon: Icon(Icons.exit_to_app, color: Colors.white),

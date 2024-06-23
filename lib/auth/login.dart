@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
-import 'package:insurance_pfe/components/custombuttonauth.dart';
-import 'package:insurance_pfe/components/customlogoauth.dart';
-import 'package:insurance_pfe/components/textformfield.dart';
+import 'package:insurance_pfe/auth/components/custombuttonauth.dart';
+import 'package:insurance_pfe/auth/components/customlogoauth.dart';
+import 'package:insurance_pfe/auth/components/textformfield.dart';
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);

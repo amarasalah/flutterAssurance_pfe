@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
-import 'package:insurance_pfe/components/custombuttonauth.dart';
-import 'package:insurance_pfe/components/customlogoauth.dart';
-import 'package:insurance_pfe/components/textformfield.dart';
+import 'package:insurance_pfe/auth/components/custombuttonauth.dart';
+import 'package:insurance_pfe/auth/components/customlogoauth.dart';
+import 'package:insurance_pfe/auth/components/textformfield.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({Key? key}) : super(key: key);
