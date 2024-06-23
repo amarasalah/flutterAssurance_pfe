@@ -26,6 +26,7 @@ class MapSampleState extends State<Nosagences> {
   GoogleMapController? mapController;
   final Set<Marker> _markers = {};
   Marker? _nearestMarker;
+  Marker? _selectedMarker;
 
   // List of addresses to add markers from
   static const String initialAddress = "Assurances Maghrebia";
@@ -65,9 +66,7 @@ class MapSampleState extends State<Nosagences> {
   @override
   void initState() {
     super.initState();
-
     addMarkersFromAddresses();
-
     findNearestAgent();
   }
 
@@ -77,24 +76,58 @@ class MapSampleState extends State<Nosagences> {
       appBar: AppBar(
         title: Text('Trouvez votre Agence'),
       ),
-      body: GoogleMap(
-        markers: _markers,
-        onMapCreated: (GoogleMapController controller) {
-          mapController = controller;
-          if (_nearestMarker != null) {
-            controller.animateCamera(
-              CameraUpdate.newLatLngZoom(
-                _nearestMarker!.position,
-                14.0,
+      body: Column(
+        children: [
+          Expanded(
+            child: GoogleMap(
+              markers: _markers,
+              onMapCreated: (GoogleMapController controller) {
+                mapController = controller;
+                if (_nearestMarker != null) {
+                  controller.animateCamera(
+                    CameraUpdate.newLatLngZoom(
+                      _nearestMarker!.position,
+                      14.0,
+                    ),
+                  );
+                }
+              },
+              initialCameraPosition: CameraPosition(
+                target: _kTunisiaCenter,
+                zoom: 7,
               ),
-            );
-          }
-        },
-        initialCameraPosition: CameraPosition(
-          target: _kTunisiaCenter,
-          zoom: 7,
-        ),
-        mapType: MapType.terrain,
+              mapType: MapType.terrain,
+            ),
+          ),
+          Container(
+            height: 200.0,
+            child: ListView.builder(
+              itemCount: addresses.length,
+              itemBuilder: (context, index) {
+                return Card(
+                  child: ListTile(
+                    title: Text(
+                      addresses[index],
+                      style: TextStyle(
+                        color: _selectedMarker != null &&
+                                _selectedMarker!.markerId.value ==
+                                    addresses[index]
+                            ? Colors.white
+                            : Colors.black,
+                      ),
+                    ),
+                    selected: _selectedMarker != null &&
+                        _selectedMarker!.markerId.value == addresses[index],
+                    selectedTileColor: Color(0xFFEE5E1B),
+                    onTap: () async {
+                      await _onAgencySelected(addresses[index]);
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: _nearestMarker != null
           ? FloatingActionButton.extended(
@@ -118,16 +151,18 @@ class MapSampleState extends State<Nosagences> {
       try {
         List<Location> locations = await locationFromAddress(address);
         if (locations.isNotEmpty) {
+          final marker = Marker(
+            markerId: MarkerId(address),
+            position: LatLng(locations[0].latitude, locations[0].longitude),
+            infoWindow: InfoWindow(
+              title: address,
+            ),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+              BitmapDescriptor.hueOrange,
+            ),
+          );
           setState(() {
-            _markers.add(
-              Marker(
-                markerId: MarkerId(address),
-                position: LatLng(locations[0].latitude, locations[0].longitude),
-                infoWindow: InfoWindow(
-                  title: address,
-                ),
-              ),
-            );
+            _markers.add(marker);
           });
         }
       } catch (e) {
@@ -168,6 +203,51 @@ class MapSampleState extends State<Nosagences> {
       });
     } catch (e) {
       print('Error finding nearest agent: $e');
+    }
+  }
+
+  Future<void> _onAgencySelected(String address) async {
+    try {
+      List<Location> locations = await locationFromAddress(address);
+      if (locations.isNotEmpty) {
+        LatLng position = LatLng(locations[0].latitude, locations[0].longitude);
+
+        // Find the corresponding marker
+        Marker? selectedMarker = _markers.firstWhere(
+          (marker) => marker.markerId.value == address,
+        );
+
+        if (selectedMarker != null) {
+          setState(() {
+            // Reset the previous selected marker color if any
+            if (_selectedMarker != null) {
+              _markers.remove(_selectedMarker);
+              _markers.add(
+                _selectedMarker!.copyWith(
+                  iconParam: BitmapDescriptor.defaultMarkerWithHue(
+                    BitmapDescriptor.hueOrange,
+                  ),
+                ),
+              );
+            }
+
+            // Update the selected marker
+            _markers.remove(selectedMarker);
+            _selectedMarker = selectedMarker.copyWith(
+              iconParam: BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueRed,
+              ),
+            );
+            _markers.add(_selectedMarker!);
+
+            mapController?.animateCamera(
+              CameraUpdate.newLatLngZoom(position, 14.0),
+            );
+          });
+        }
+      }
+    } catch (e) {
+      print('Error selecting agency: $e');
     }
   }
 }

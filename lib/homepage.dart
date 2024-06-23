@@ -1,3 +1,6 @@
+import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:insurance_pfe/historique.dart';
@@ -12,11 +15,54 @@ class Homepage extends StatefulWidget {
 
 class _HomepageState extends State<Homepage> {
   int myCurrentIndex = 0;
+  final _pageController = PageController(initialPage: 0);
+  final _controller = NotchBottomBarController(index: 0);
+  String userProfilepic = 'https://via.placeholder.com/150';
+  String userProfilename = 'Utilisateur';
+  bool _isLoading = true;
+  getToken() async {
+    String? mytoken = await FirebaseMessaging.instance.getToken();
+    print("-----------------------------------------");
+    print(mytoken);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+    getToken();
+  }
+
+  Future<void> _fetchUserData() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        DocumentSnapshot userData = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
+        if (userData.exists) {
+          setState(() {
+            userProfilename = userData['fullname'] ?? 'Utilisateur';
+            userProfilepic = userData['profileImageUrl'] ??
+                'https://via.placeholder.com/150';
+            _isLoading = false;
+          });
+        }
+      } catch (e) {
+        print('Error fetching user data: $e');
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
 
+    // Redirect to login if user is not authenticated
     if (user == null || !user.emailVerified) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         Navigator.of(context).pushReplacementNamed("login");
@@ -33,44 +79,69 @@ class _HomepageState extends State<Homepage> {
     ];
 
     return Scaffold(
-      body: SafeArea(child: pages[myCurrentIndex]),
-      bottomNavigationBar: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-        decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black.withOpacity(0.5),
-                blurRadius: 25,
-                offset: const Offset(8, 20))
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(30),
-          child: BottomNavigationBar(
-            currentIndex: myCurrentIndex,
-            onTap: (index) {
-              setState(() {
-                myCurrentIndex = index;
-              });
-            },
-            selectedItemColor: Colors.orange,
-            unselectedItemColor: Colors.black,
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home),
-                label: 'Accueil',
+      body: SafeArea(
+        child: _isLoading
+            ? Center(
+                child:
+                    CircularProgressIndicator()) // Show loading spinner while fetching data
+            : PageView(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(),
+                children: List.generate(pages.length, (index) => pages[index]),
               ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.map),
-                label: 'Carte',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.history),
-                label: 'History',
-              ),
-            ],
+      ),
+      extendBody: true,
+      bottomNavigationBar: AnimatedNotchBottomBar(
+        notchBottomBarController: _controller,
+        color: Color.fromARGB(255, 255, 255, 255),
+        showLabel: false,
+        notchColor: const Color(0xFFF38F1D),
+        removeMargins: false,
+        bottomBarWidth: 500,
+        durationInMilliSeconds: 300,
+        bottomBarItems: [
+          const BottomBarItem(
+            inActiveItem: Icon(
+              Icons.home,
+              color: const Color(0xFFF38F1D),
+            ),
+            activeItem: Icon(
+              Icons.home,
+              color: Colors.white,
+            ),
+            itemLabel: 'Accueil',
           ),
-        ),
+          const BottomBarItem(
+            inActiveItem: Icon(
+              Icons.map,
+              color: const Color(0xFFF38F1D),
+            ),
+            activeItem: Icon(
+              Icons.map,
+              color: Colors.white,
+            ),
+            itemLabel: 'Carte',
+          ),
+          const BottomBarItem(
+            inActiveItem: Icon(
+              Icons.history,
+              color: const Color(0xFFF38F1D),
+            ),
+            activeItem: Icon(
+              Icons.history,
+              color: Colors.white,
+            ),
+            itemLabel: 'Historique',
+          ),
+        ],
+        onTap: (index) {
+          setState(() {
+            myCurrentIndex = index;
+            _pageController.jumpToPage(index);
+          });
+        },
+        kIconSize: 20,
+        kBottomRadius: 20,
       ),
     );
   }
@@ -90,6 +161,13 @@ class _HomepageState extends State<Homepage> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color.fromARGB(255, 255, 0, 0),
+                  offset: Offset(0.0, 1.0), //(x,y)
+                  blurRadius: 6.0,
+                ),
+              ],
             ),
             height: 150,
             padding: const EdgeInsets.all(16.0),
@@ -100,9 +178,8 @@ class _HomepageState extends State<Homepage> {
                     Navigator.of(context).pushNamed('editProfile');
                   },
                   child: CircleAvatar(
-                    radius: 35.0,
-                    backgroundImage: NetworkImage(
-                        user.photoURL ?? 'https://via.placeholder.com/150'),
+                    radius: 30.0,
+                    backgroundImage: NetworkImage(userProfilepic),
                   ),
                 ),
                 SizedBox(width: 20.0),
@@ -113,14 +190,14 @@ class _HomepageState extends State<Homepage> {
                     Text(
                       'Bienvenue de retour',
                       style: TextStyle(
-                        fontSize: 18.0,
+                        fontSize: 16.0,
                         color: Colors.white,
                       ),
                     ),
                     Text(
-                      user.displayName ?? 'Utilisateur',
+                      userProfilename,
                       style: TextStyle(
-                        fontSize: 22.0,
+                        fontSize: 20.0,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),
@@ -130,7 +207,9 @@ class _HomepageState extends State<Homepage> {
                 Spacer(),
                 IconButton(
                   icon: Icon(Icons.notifications, color: Colors.white),
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.of(context).pushNamed("notifications");
+                  },
                 ),
                 IconButton(
                   icon: Icon(Icons.exit_to_app, color: Colors.white),
@@ -243,49 +322,50 @@ class _HomepageState extends State<Homepage> {
     required String imageUrl,
   }) {
     return GestureDetector(
-        onTap: onTap,
-        child: Card(
-          shape: RoundedRectangleBorder(
+      onTap: onTap,
+      child: Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.0),
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage(imageUrl),
+              fit: BoxFit.cover,
+            ),
+            gradient: gradient,
             borderRadius: BorderRadius.circular(15.0),
           ),
           child: Container(
             decoration: BoxDecoration(
-              image: DecorationImage(
-                image: AssetImage(imageUrl),
-                fit: BoxFit.cover,
-              ),
               gradient: gradient,
               borderRadius: BorderRadius.circular(15.0),
             ),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: gradient,
-                borderRadius: BorderRadius.circular(15.0),
-              ),
-              child: ListTile(
-                contentPadding: EdgeInsets.all(16.0),
-                title: Text(
-                  title,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18.0,
-                  ),
-                ),
-                subtitle: Text(
-                  subtitle,
-                  style: TextStyle(
-                    color: Colors.white70,
-                  ),
-                ),
-                trailing: Icon(
-                  icon,
+            child: ListTile(
+              contentPadding: EdgeInsets.all(16.0),
+              title: Text(
+                title,
+                style: TextStyle(
                   color: Colors.white,
-                  size: 30.0,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18.0,
                 ),
+              ),
+              subtitle: Text(
+                subtitle,
+                style: TextStyle(
+                  color: Colors.white70,
+                ),
+              ),
+              trailing: Icon(
+                icon,
+                color: Colors.white,
+                size: 30.0,
               ),
             ),
           ),
-        ));
+        ),
+      ),
+    );
   }
 }
