@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:intl/intl.dart';
 
 import '../services/notification_service.dart';
 
@@ -117,13 +116,23 @@ class HealthInsuranceController {
     }
   }
 
+  int calculateTotal() {
+    int total = 0;
+    total += (formData['is_student_score'] ?? 0) as int;
+    total += (formData['has_children_score'] ?? 0) as int;
+    total += 100; // Assuming the third step is always worth 100
+    total += 100; // Assuming the fourth step is always worth 100
+    return total;
+  }
+
   void submitData() async {
     formData['name'] = nameController.text;
     formData['age'] = ageController.text;
     formData['selectedOption'] = selectedOption;
-    formData['qcmStep1'] = formData['qcmStep1'] ?? 'N/A';
-    formData['qcmStep2'] = formData['qcmStep2'] ?? 'N/A';
+    formData['is_student'] = formData['is_student'] ?? 'N/A';
+    formData['has_children'] = formData['has_children'] ?? 'N/A';
     formData['birthDate'] = birthDateController.text;
+    formData['total'] = calculateTotal();
 
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -133,6 +142,9 @@ class HealthInsuranceController {
           'data': formData,
           'timestamp': Timestamp.now(),
           'type': 'maladie',
+          "addedDate": Timestamp.now(),
+          "expiryDate": Timestamp.now(),
+          "price": formData['total'],
         });
 
         RemoteMessage dummyMessage = RemoteMessage(

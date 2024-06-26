@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class YesNoStepView extends StatefulWidget {
   final String question;
   final String stepKey;
-  final Function(String) onOptionSelected;
+  final Function(String, int) onOptionSelected;
 
   YesNoStepView({
     required this.question,
@@ -29,14 +29,14 @@ class _YesNoStepViewState extends State<YesNoStepView> {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 16),
-          _buildOption('Oui'),
-          _buildOption('Non'),
+          _buildOption('Oui', 100),
+          _buildOption('Non', 50),
         ],
       ),
     );
   }
 
-  Widget _buildOption(String option) {
+  Widget _buildOption(String option, int score) {
     bool isSelected = option == selectedOption;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
@@ -45,7 +45,7 @@ class _YesNoStepViewState extends State<YesNoStepView> {
           setState(() {
             selectedOption = option;
           });
-          widget.onOptionSelected(option);
+          widget.onOptionSelected(option, score);
         },
         child: Container(
           decoration: BoxDecoration(

@@ -49,15 +49,19 @@ class _HealthInsuranceViewState extends State<HealthInsuranceView> {
                 children: [
                   YesNoStepView(
                     question: 'Etes Vous un etudiant ?',
-                    stepKey: 'qcmStep1',
-                    onOptionSelected: (value) =>
-                        _controller.formData['qcmStep1'] = value,
+                    stepKey: 'is_student',
+                    onOptionSelected: (value, score) {
+                      _controller.formData['is_student'] = value;
+                      _controller.formData['is_student_score'] = score;
+                    },
                   ),
                   YesNoMarriedView(
                     question: 'Avez Vous des Enfants ?',
-                    stepKey: 'qcmStep2',
-                    onOptionSelected: (value) =>
-                        _controller.formData['qcmStep2'] = value,
+                    stepKey: 'has_children',
+                    onOptionSelected: (value, score) {
+                      _controller.formData['has_children'] = value;
+                      _controller.formData['has_children_score'] = score;
+                    },
                   ),
                   DateStepView(
                     question: 'Entrer votre date de Naissance',

@@ -1,24 +1,33 @@
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:insurance_pfe/auth/components/color.dart';
 import 'package:insurance_pfe/homepage.dart';
 
 class StripePaymentApp extends StatelessWidget {
+  final int total;
+
+  StripePaymentApp({required this.total});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: StripePaymentPage(),
+      home: StripePaymentPage(total: total),
     );
   }
 }
 
 class StripePaymentPage extends StatelessWidget {
+  final int total;
+
+  StripePaymentPage({required this.total});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          child: PaymentDetails(),
+          child: PaymentDetails(total: total),
         ),
       ),
     );
@@ -26,6 +35,10 @@ class StripePaymentPage extends StatelessWidget {
 }
 
 class PaymentDetails extends StatefulWidget {
+  final int total;
+
+  PaymentDetails({required this.total});
+
   @override
   _PaymentDetailsState createState() => _PaymentDetailsState();
 }
@@ -92,18 +105,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              PaymentOption(icon: Icons.credit_card, label: 'Visa'),
-              PaymentOption(icon: Icons.credit_card, label: 'Mastercard'),
-            ],
-          ),
           SizedBox(height: 20),
-          Text(
-            'Select card',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
           SizedBox(height: 20),
           CardDetails(cardName: _cardName, expiryDate: _expiryDate),
           SizedBox(height: 20),
@@ -118,8 +120,8 @@ class _PaymentDetailsState extends State<PaymentDetails> {
             cvvController: _cvvController,
           ),
           SizedBox(height: 20),
-          OrderTotal(),
-          PayNowButton(),
+          OrderTotal(total: widget.total),
+          PayNowButton(total: widget.total),
           SizedBox(height: 20),
         ],
       ),
@@ -154,11 +156,12 @@ class CardDetails extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: 300,
       padding: EdgeInsets.all(16.0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16.0),
         gradient: LinearGradient(
-          colors: [Colors.pinkAccent, Colors.purpleAccent],
+          colors: [primaryColor, Color(0xFFD87A0E)],
         ),
       ),
       child: Column(
@@ -217,7 +220,6 @@ class AddNewCardForm extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('+ add new card', style: TextStyle(fontSize: 18)),
         SizedBox(height: 20),
         TextField(
           controller: nameController,
@@ -294,6 +296,10 @@ class AddNewCardForm extends StatelessWidget {
 }
 
 class OrderTotal extends StatelessWidget {
+  final int total;
+
+  OrderTotal({required this.total});
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -301,7 +307,7 @@ class OrderTotal extends StatelessWidget {
       children: [
         Text('Order total',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        Text('\$89',
+        Text('\$$total',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
       ],
     );
@@ -309,6 +315,10 @@ class OrderTotal extends StatelessWidget {
 }
 
 class PayNowButton extends StatelessWidget {
+  final int total;
+
+  PayNowButton({required this.total});
+
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
@@ -318,7 +328,7 @@ class PayNowButton extends StatelessWidget {
           dialogType: DialogType.success,
           animType: AnimType.bottomSlide,
           title: 'Payment Successful',
-          desc: 'Your payment has been processed successfully.',
+          desc: 'Your payment of \$$total has been processed successfully.',
           btnOkOnPress: () {
             Navigator.of(context)
                 .push(MaterialPageRoute(builder: (context) => Homepage()));
@@ -327,7 +337,9 @@ class PayNowButton extends StatelessWidget {
       },
       child: Text('Pay now', style: TextStyle(fontSize: 18)),
       style: ElevatedButton.styleFrom(
-        padding: EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+        padding: EdgeInsets.symmetric(horizontal: 40, vertical: 0),
       ),
     );
   }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class CashPaymentPage extends StatelessWidget {
+class FakeIdPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
