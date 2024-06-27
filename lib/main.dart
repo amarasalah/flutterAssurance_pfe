@@ -6,7 +6,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:insurance_pfe/auth/signup.dart';
+import 'package:insurance_pfe/insuranceServices/healthinsurance/controllers/health_insurance_controller.dart';
 import 'package:insurance_pfe/insuranceServices/healthinsurance/views/health_insurance_view.dart';
+import 'package:insurance_pfe/insuranceServices/healthinsurance/views/stripe_payment_page.dart';
 import 'package:insurance_pfe/insuranceServices/homeinsurance/views/home_insurance_view.dart';
 import 'package:insurance_pfe/insuranceServices/lifeinsurance/views/life_insurance_view.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -222,9 +224,9 @@ class _MyAppContentState extends State<MyAppContent> {
         "historique": (context) => HistoriqueScreen(),
         "health": (context) => HealthInsuranceView(),
         "life": (context) => LifeInsuranceView(),
-        "home": (context) => HomeInsuranceView(),
+        "/home": (context) => HomeInsuranceView(),
         "car": (context) => CarInsuranceView(),
-        "notifications": (context) => NotificationScreen()
+        "/notifications": (context) => NotificationScreen(),
       },
     );
   }

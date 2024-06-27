@@ -1,43 +1,25 @@
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:insurance_pfe/auth/components/color.dart';
-import 'package:insurance_pfe/homepage.dart';
-
-class StripePaymentApp extends StatelessWidget {
-  final int total;
-
-  StripePaymentApp({required this.total});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: StripePaymentPage(total: total),
-    );
-  }
-}
+import '../controllers/health_insurance_controller.dart';
 
 class StripePaymentPage extends StatelessWidget {
   final int total;
+  final HealthInsuranceController controller;
 
-  StripePaymentPage({required this.total});
+  StripePaymentPage({required this.total, required this.controller});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: PaymentDetails(total: total),
-        ),
-      ),
-    );
+    return PaymentDetails(total: total, controller: controller);
   }
 }
 
 class PaymentDetails extends StatefulWidget {
   final int total;
+  final HealthInsuranceController controller;
 
-  PaymentDetails({required this.total});
+  PaymentDetails({required this.total, required this.controller});
 
   @override
   _PaymentDetailsState createState() => _PaymentDetailsState();
@@ -93,19 +75,10 @@ class _PaymentDetailsState extends State<PaymentDetails> {
       child: Column(
         children: [
           SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Icon(Icons.arrow_back),
-            ],
-          ),
-          SizedBox(height: 20),
           Text(
             'Payment details',
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
-          SizedBox(height: 20),
-          SizedBox(height: 20),
           SizedBox(height: 20),
           CardDetails(cardName: _cardName, expiryDate: _expiryDate),
           SizedBox(height: 20),
@@ -121,7 +94,7 @@ class _PaymentDetailsState extends State<PaymentDetails> {
           ),
           SizedBox(height: 20),
           OrderTotal(total: widget.total),
-          PayNowButton(total: widget.total),
+          PayNowButton(total: widget.total, controller: widget.controller),
           SizedBox(height: 20),
         ],
       ),
@@ -316,13 +289,18 @@ class OrderTotal extends StatelessWidget {
 
 class PayNowButton extends StatelessWidget {
   final int total;
+  final HealthInsuranceController controller;
 
-  PayNowButton({required this.total});
+  PayNowButton({required this.total, required this.controller});
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
       onPressed: () {
+        // Call the submitData method from HealthInsuranceController
+        controller.submitData();
+
+        // Show the success dialog
         AwesomeDialog(
           context: context,
           dialogType: DialogType.success,
@@ -330,8 +308,8 @@ class PayNowButton extends StatelessWidget {
           title: 'Payment Successful',
           desc: 'Your payment of \$$total has been processed successfully.',
           btnOkOnPress: () {
-            Navigator.of(context)
-                .push(MaterialPageRoute(builder: (context) => Homepage()));
+            // Navigate back to the start of the PageView
+            Navigator.of(context).popUntil((route) => route.isFirst);
           },
         )..show();
       },
@@ -339,7 +317,7 @@ class PayNowButton extends StatelessWidget {
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
-        padding: EdgeInsets.symmetric(horizontal: 40, vertical: 0),
+        padding: EdgeInsets.symmetric(horizontal: 40, vertical: 10),
       ),
     );
   }

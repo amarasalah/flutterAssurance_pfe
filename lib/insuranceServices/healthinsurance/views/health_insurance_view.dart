@@ -5,6 +5,7 @@ import 'yes_no_married_view.dart';
 import 'date_step_view.dart';
 import 'form_step_view.dart';
 import 'summary_step_view.dart';
+import 'stripe_payment_page.dart';
 
 class HealthInsuranceView extends StatefulWidget {
   @override
@@ -38,7 +39,7 @@ class _HealthInsuranceViewState extends State<HealthInsuranceView> {
         child: Column(
           children: [
             LinearProgressIndicator(
-              value: (_controller.currentPage + 1) / 5,
+              value: (_controller.currentPage + 1) / 6,
               backgroundColor: Colors.grey[200],
               valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
             ),
@@ -69,6 +70,9 @@ class _HealthInsuranceViewState extends State<HealthInsuranceView> {
                   ),
                   FormStepView(controller: _controller),
                   SummaryStepView(controller: _controller),
+                  StripePaymentPage(
+                      total: _controller.calculateTotal(),
+                      controller: _controller),
                 ],
               ),
             ),
@@ -104,7 +108,7 @@ class _HealthInsuranceViewState extends State<HealthInsuranceView> {
                         ),
                         onPressed: () => setState(() => _controller.nextPage()),
                         child: Text(
-                            _controller.currentPage < 4 ? 'Next' : 'Submit'),
+                            _controller.currentPage < 5 ? 'Next' : 'Pay Now'),
                       ),
                     ),
                   ),

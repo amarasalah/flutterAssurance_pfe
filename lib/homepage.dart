@@ -340,7 +340,7 @@ class _HomepageState extends State<Homepage> {
                     subtitle: 'Voir toutes vos assurances ici',
                     icon: Icons.home,
                     onTap: () {
-                      Navigator.of(context).pushNamed('home');
+                      Navigator.of(context).pushNamed('homepage');
                     },
                     imageUrl: 'images/home.jpeg',
                   ),

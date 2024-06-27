@@ -1,136 +1,87 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:insurance_pfe/insuranceServices/healthinsurance/views/stripe_payment_page.dart';
 import '../controllers/health_insurance_controller.dart';
-import 'invoice_page.dart';
-import 'payment_page.dart';
 
 class SummaryStepView extends StatelessWidget {
   final HealthInsuranceController controller;
 
   SummaryStepView({required this.controller});
 
+  Future<Map<String, dynamic>> _fetchUserData() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DocumentSnapshot userData = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      return userData.data() as Map<String, dynamic>;
+    } else {
+      throw Exception("User not logged in");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    int total = controller.calculateTotal();
-    return Center(
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.orange,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey,
-              offset: Offset(0.0, 1.0), //(x,y)
-              blurRadius: 6.0,
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _fetchUserData(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          return Center(child: Text('Error fetching user data'));
+        } else if (!snapshot.hasData) {
+          return Center(child: Text('No user data found'));
+        } else {
+          var userData = snapshot.data!;
+          var dobController = userData['birthdate'] ?? 'N/A';
+          var fullnameController = userData['fullname'] ?? 'N/A';
+          var nationalIdController = userData['nationalId'] ?? 'N/A';
+          var phoneController = userData['phone'] ?? 'N/A';
+          var selectedCountry = userData['country'] ?? 'Tunis';
+
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Summary',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 20),
+                _buildSummaryItem('Name:', fullnameController),
+                _buildSummaryItem('National ID:', nationalIdController),
+                _buildSummaryItem('Phone:', phoneController),
+                _buildSummaryItem('Country:', selectedCountry),
+                _buildSummaryItem(
+                    'Student:', controller.formData['is_student'] ?? 'N/A'),
+                _buildSummaryItem(
+                    'Children:', controller.formData['has_children'] ?? 'N/A'),
+                _buildSummaryItem('Birth Date:', dobController),
+                _buildSummaryItem('Marital Status:', controller.selectedOption),
+                _buildSummaryItem(
+                    'Total:', controller.calculateTotal().toString()),
+              ],
             ),
-          ],
-        ),
-        margin: const EdgeInsets.all(10.0),
-        width: 300.0, // Increase width for more content space
-        padding: const EdgeInsets.all(16.0), // Add padding for inner content
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Summary: Review Your Data',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-            SizedBox(height: 16),
-            Text(
-              'Name: ${controller.nameController.text}',
-              style: TextStyle(color: Colors.white),
-            ),
-            Text(
-              'Age: ${controller.ageController.text}',
-              style: TextStyle(color: Colors.white),
-            ),
-            Text(
-              'Selected Option: ${controller.selectedOption}',
-              style: TextStyle(color: Colors.white),
-            ),
-            Text(
-              'Student: ${controller.formData['is_student']}',
-              style: TextStyle(color: Colors.white),
-            ),
-            Text(
-              'Children: ${controller.formData['has_children']}',
-              style: TextStyle(color: Colors.white),
-            ),
-            Text(
-              'Birth Date: ${controller.birthDateController.text}',
-              style: TextStyle(color: Colors.white),
-            ),
-            Text(
-              'Total: $total',
-              style: TextStyle(color: Colors.white),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => _showPaymentDialog(context, total),
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.orange,
-                backgroundColor: Colors.white, // Text color
-              ),
-              child: Text('Proceed to Payment'),
-            ),
-          ],
-        ),
+          );
+        }
+      },
+    );
+  }
+
+  Widget _buildSummaryItem(String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(title,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500)),
+          Text(value,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w400)),
+        ],
       ),
-    );
-  }
-
-  void _showPaymentDialog(BuildContext context, int total) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Choose an option"),
-          content: Text("Would you like to pay now or receive an invoice?"),
-          actions: [
-            TextButton(
-              child: Text("Invoice"),
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-                _showInvoiceDialog(context);
-              },
-            ),
-            TextButton(
-              child: Text("Pay"),
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                      builder: (context) => StripePaymentPage(total: total)),
-                );
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showInvoiceDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Invoice Number"),
-          content: Text("Your invoice number is 12345-67890."),
-          actions: [
-            TextButton(
-              child: Text("OK"),
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
-              },
-            ),
-          ],
-        );
-      },
     );
   }
 }

@@ -95,14 +95,12 @@ class HealthInsuranceController {
   }
 
   void nextPage() {
-    if (currentPage < 4) {
+    if (currentPage < 5) {
       currentPage++;
       pageController.nextPage(
         duration: Duration(milliseconds: 300),
         curve: Curves.easeIn,
       );
-    } else {
-      submitData();
     }
   }
 
