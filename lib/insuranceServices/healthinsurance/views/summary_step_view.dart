@@ -49,8 +49,8 @@ class SummaryStepView extends StatelessWidget {
                     'Student:', controller.formData['is_student'] ?? 'N/A'),
                 _buildSummaryItem(
                     'Children:', controller.formData['has_children'] ?? 'N/A'),
-                _buildSummaryItem('Birth Date:', dobController),
-                _buildSummaryItem('Marital Status:', controller.selectedOption),
+                _buildSummaryItem('Date de Naissance:', dobController),
+                _buildSummaryItem('Agence:', controller.selectedOption),
                 _buildSummaryItem(
                     'Total:', controller.calculateTotal().toString()),
                 SizedBox(height: 20),

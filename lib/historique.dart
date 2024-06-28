@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // For date formatting
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 
 class HistoriqueScreen extends StatefulWidget {
   @override
@@ -10,37 +12,8 @@ class _HistoriqueScreenState extends State<HistoriqueScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   TextEditingController _searchController = TextEditingController();
-  List<Map<String, dynamic>> _items = [
-    {
-      'id': 'Contrat Assurance maladie ',
-      'type': 'maladie',
-      'agence': 'Agence Zeineb Gabes',
-      'date': DateTime.now(),
-      'status': 'en attente'
-    },
-    {
-      'id': 'Contrat Assurance vie',
-      'type': 'vie',
-      'agence': 'Agence Tunis',
-      'date': DateTime.now().subtract(Duration(days: 1)),
-      'status': 'en cours'
-    },
-    {
-      'id': 'Contrat Assurance vehicule',
-      'type': 'vehicule',
-      'agence': 'Agence Sfax',
-      'date': DateTime.now().subtract(Duration(days: 2)),
-      'status': 'payee'
-    },
-    {
-      'id': 'Contrat Assurance habitation',
-      'type': 'habitation',
-      'agence': 'Agence Bizerte',
-      'date': DateTime.now().subtract(Duration(days: 3)),
-      'status': 'expiree'
-    },
-  ];
-  late List<Map<String, dynamic>> _filteredItems;
+  List<Map<String, dynamic>> _items = [];
+  List<Map<String, dynamic>> _filteredItems = [];
   String _selectedType = 'All';
   final List<String> _filterTypes = [
     'All',
@@ -53,10 +26,43 @@ class _HistoriqueScreenState extends State<HistoriqueScreen>
   @override
   void initState() {
     super.initState();
-    _tabController =
-        TabController(length: 5, vsync: this); // Change length to 5
+    _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(_filterItems);
-    _filteredItems = _items;
+    _fetchData();
+  }
+
+  void _fetchData() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+
+    if (userId != null) {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('responses')
+          .where('userId', isEqualTo: userId)
+          .get();
+
+      final items = querySnapshot.docs.map((doc) {
+        final data = doc.data();
+        print("Fetched data: $data");
+
+        final timestamp = data['timestamp'] != null
+            ? (data['timestamp'] as Timestamp).toDate()
+            : DateTime.now();
+
+        return {
+          'id': doc.id,
+          'type': data['type'] ?? '',
+          'agence': data['agency'] ?? '',
+          'date': timestamp,
+          'status': data['approve_status'] ?? '',
+        };
+      }).toList();
+
+      setState(() {
+        _items = items;
+        _filteredItems = _items;
+        print("Items: $_items");
+      });
+    }
   }
 
   void _filterItems() {
@@ -73,16 +79,13 @@ class _HistoriqueScreenState extends State<HistoriqueScreen>
           currentStatus = 'en attente';
           break;
         case 3:
-          currentStatus = 'en cours';
-          break;
-        case 4:
           currentStatus = 'expiree';
           break;
         default:
           currentStatus = 'All';
       }
       _filteredItems = _items.where((item) {
-        final matchesQuery = item['id']!.contains(_searchController.text);
+        final matchesQuery = item['id'].contains(_searchController.text);
         final matchesType =
             _selectedType == 'All' || item['type'] == _selectedType;
         final matchesStatus =
@@ -110,7 +113,7 @@ class _HistoriqueScreenState extends State<HistoriqueScreen>
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 5, // Change length to 5
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: Text(
@@ -130,10 +133,9 @@ class _HistoriqueScreenState extends State<HistoriqueScreen>
             unselectedLabelColor: Colors.white,
             indicatorColor: const Color(0xFFF38F1D),
             tabs: [
-              Tab(text: 'Tous'), // Add "Tous" tab
+              Tab(text: 'Tous'),
               Tab(text: 'Payée'),
               Tab(text: 'En attente'),
-              Tab(text: 'En cours'),
               Tab(text: 'Expirée'),
             ],
           ),
@@ -197,7 +199,6 @@ class _HistoriqueScreenState extends State<HistoriqueScreen>
                     _buildListView(),
                     _buildListView(),
                     _buildListView(),
-                    _buildListView(),
                   ],
                 ),
               ),
@@ -237,7 +238,7 @@ class HistoriqueCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  item['id']!,
+                  item['id'],
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 Container(
@@ -247,9 +248,11 @@ class HistoriqueCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8.0),
                   ),
                   child: Text(
-                    item['status']!,
+                    item['status'],
                     style: TextStyle(
-                        color: Color(0xFFEE5E1B), fontWeight: FontWeight.bold),
+                      color: Color(0xFFEE5E1B),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -264,13 +267,11 @@ class HistoriqueCard extends StatelessWidget {
                 Expanded(
                   child: Text('Type:\n ${item['type']}'),
                 ),
-                SizedBox(
-                  width: 20,
-                ),
+                SizedBox(width: 20),
                 Icon(Icons.location_on, color: Colors.yellow[700]),
                 SizedBox(width: 8.0),
                 Expanded(
-                  child: Text(item['agence']!),
+                  child: Text(item['agence']),
                 ),
               ],
             ),
@@ -279,9 +280,7 @@ class HistoriqueCard extends StatelessWidget {
               children: [
                 Icon(Icons.calendar_today, color: Colors.black54),
                 SizedBox(width: 8.0),
-                Text(DateFormat(
-                  'dd MMM, HH:mm',
-                ).format(item['date'])),
+                Text(DateFormat('dd MMM, HH:mm').format(item['date'])),
               ],
             ),
           ],

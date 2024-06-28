@@ -15,7 +15,8 @@ class HealthInsuranceController {
   TextEditingController nameController = TextEditingController();
   TextEditingController ageController = TextEditingController();
   TextEditingController birthDateController = TextEditingController();
-  late String selectedOption = 'Celibataire';
+  String selectedOption =
+      'Gabes'; // Ensure this value matches one of the dropdown items
 
   late FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
 
@@ -94,6 +95,10 @@ class HealthInsuranceController {
     }
   }
 
+  void updateSelectedOption(String value) {
+    selectedOption = value;
+  }
+
   void nextPage() {
     if (currentPage < 5) {
       currentPage++;
@@ -136,13 +141,20 @@ class HealthInsuranceController {
     if (user != null) {
       try {
         await FirebaseFirestore.instance.collection('responses').add({
-          'userId': user.uid,
-          'data': formData,
-          'timestamp': Timestamp.now(),
+          'age': formData['age'] ?? '',
+          'birthDate': formData['birthDate'] ?? '',
+          'has_children': formData['has_children'] ?? 'N/A',
+          'is_student': formData['is_student'] ?? 'N/A',
+          'idNum': formData['name'] ?? '',
+          'agency': formData['selectedOption'] ?? 'Gabes',
+          'total': calculateTotal(),
+          'expiryDate':
+              Timestamp.fromDate(DateTime.now().add(Duration(days: 365))),
+          'price': calculateTotal(),
+          'timestamp': Timestamp.fromDate(DateTime.now()),
           'type': 'maladie',
-          "addedDate": Timestamp.now(),
-          "expiryDate": Timestamp.now(),
-          "price": formData['total'],
+          'userId': user.uid,
+          'approve_status': 'waiting',
         });
 
         RemoteMessage dummyMessage = RemoteMessage(

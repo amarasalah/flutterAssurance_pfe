@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import '../controllers/health_insurance_controller.dart';
 
-class FormStepView extends StatelessWidget {
+class FormStepView extends StatefulWidget {
   final HealthInsuranceController controller;
 
   FormStepView({required this.controller});
 
+  @override
+  _FormStepViewState createState() => _FormStepViewState();
+}
+
+class _FormStepViewState extends State<FormStepView> {
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -18,7 +23,7 @@ class FormStepView extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: TextField(
-                controller: controller.nameController,
+                controller: widget.controller.nameController,
                 decoration: InputDecoration(
                   labelText: "Numero de Carte d'identite",
                   labelStyle: TextStyle(color: Colors.orange),
@@ -37,7 +42,7 @@ class FormStepView extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: TextField(
-                controller: controller.ageController,
+                controller: widget.controller.ageController,
                 decoration: InputDecoration(
                   labelText: 'Entrez Votre Adresse',
                   labelStyle: TextStyle(color: Colors.orange),
@@ -56,17 +61,21 @@ class FormStepView extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: DropdownButton<String>(
-                value: controller.selectedOption,
+                value: widget.controller.selectedOption,
                 style: const TextStyle(color: Colors.orange),
-                hint: Text('Situation Sociale'),
-                items: ['Mariee', 'Celibataire']
+                hint: Text('Agence'),
+                items: ['Sfax', 'Gabes', 'Mednine', 'Tunis', 'Kairouan']
                     .map((option) => DropdownMenuItem(
                           value: option,
                           child: Text(option),
                         ))
                     .toList(),
                 onChanged: (value) {
-                  controller.selectedOption = value!;
+                  if (value != null) {
+                    setState(() {
+                      widget.controller.updateSelectedOption(value);
+                    });
+                  }
                 },
               ),
             ),

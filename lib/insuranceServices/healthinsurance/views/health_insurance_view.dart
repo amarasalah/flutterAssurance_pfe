@@ -1,4 +1,6 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../controllers/health_insurance_controller.dart';
 import 'yes_no_step_view.dart';
 import 'yes_no_married_view.dart';
@@ -33,8 +35,32 @@ class _HealthInsuranceViewState extends State<HealthInsuranceView> {
         _controller.nextPage();
       });
     } else if (option == 'get_invoice') {
+      _storeInvoiceData();
       _showInvoiceDialog();
     }
+  }
+
+  Future<void> _storeInvoiceData() async {
+    final user = FirebaseAuth.instance.currentUser;
+
+    final formData = _controller.formData;
+    final data = {
+      'age': formData['age'] ?? '',
+      'birthDate': formData['birthDate'] ?? '',
+      'has_children': formData['has_children'] ?? 'N/A',
+      'is_student': formData['is_student'] ?? 'N/A',
+      'name': formData['name'] ?? '',
+      'agency': formData['selectedOption'] ?? 'Gabes',
+      'total': _controller.calculateTotal(),
+      'expiryDate': Timestamp.fromDate(DateTime.now().add(Duration(days: 365))),
+      'price': _controller.calculateTotal(),
+      'timestamp': Timestamp.fromDate(DateTime.now()),
+      'type': 'maladie',
+      'userId': user?.uid,
+      'approve_status': 'waiting',
+    };
+
+    await FirebaseFirestore.instance.collection('responses').add(data);
   }
 
   void _showInvoiceDialog() {
@@ -50,6 +76,34 @@ class _HealthInsuranceViewState extends State<HealthInsuranceView> {
               onPressed: () {
                 Navigator.of(context).pop();
                 Navigator.of(context).popUntil((route) => route.isFirst);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showPaymentOptionDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Choose Payment Option'),
+          content: Text('How would you like to proceed with the payment?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Pay Online'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _handlePaymentOption('pay_online');
+              },
+            ),
+            TextButton(
+              child: Text('Get Invoice'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _handlePaymentOption('get_invoice');
               },
             ),
           ],
@@ -132,8 +186,24 @@ class _HealthInsuranceViewState extends State<HealthInsuranceView> {
                         ),
                       ),
                     ),
+                  if (_controller.currentPage ==
+                      4) // Show the Next button only on the summary page
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(horizontal: 30),
+                          ),
+                          onPressed: () => _showPaymentOptionDialog(),
+                          child: Text('Next'),
+                        ),
+                      ),
+                    ),
                   if (_controller.currentPage <
-                      5) // Only show the Next button if not on the last page
+                      4) // Show the Next button on all pages except the summary page and the payment page
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
