@@ -1,6 +1,7 @@
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:insurance_pfe/auth/components/color.dart';
+import 'package:insurance_pfe/homepage.dart';
 import '../controllers/health_insurance_controller.dart';
 
 class StripePaymentPage extends StatelessWidget {
@@ -11,7 +12,9 @@ class StripePaymentPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PaymentDetails(total: total, controller: controller);
+    return SingleChildScrollView(
+      child: PaymentDetails(total: total, controller: controller),
+    );
   }
 }
 
@@ -98,24 +101,6 @@ class _PaymentDetailsState extends State<PaymentDetails> {
           SizedBox(height: 20),
         ],
       ),
-    );
-  }
-}
-
-class PaymentOption extends StatelessWidget {
-  final IconData icon;
-  final String label;
-
-  const PaymentOption({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, size: 48),
-        SizedBox(height: 8),
-        Text(label, style: TextStyle(fontSize: 16)),
-      ],
     );
   }
 }
@@ -296,9 +281,9 @@ class PayNowButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: () {
+      onPressed: () async {
         // Call the submitData method from HealthInsuranceController
-        controller.submitData();
+        await controller.submitData();
 
         // Show the success dialog
         AwesomeDialog(
@@ -308,8 +293,13 @@ class PayNowButton extends StatelessWidget {
           title: 'Payment Successful',
           desc: 'Your payment of \$$total has been processed successfully.',
           btnOkOnPress: () {
-            // Navigate back to the start of the PageView
-            Navigator.of(context).popUntil((route) => route.isFirst);
+            // Navigate back to the HomePage and refresh data
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                  builder: (context) =>
+                      Homepage()), // Replace HomePage with your actual home page widget
+              (route) => false,
+            );
           },
         )..show();
       },

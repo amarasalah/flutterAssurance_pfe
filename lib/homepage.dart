@@ -15,6 +15,8 @@ class Homepage extends StatefulWidget {
 }
 
 class _HomepageState extends State<Homepage> {
+  User? user;
+  Map<String, dynamic>? userData;
   int myCurrentIndex = 0;
   final _pageController = PageController(initialPage: 0);
   final _controller = NotchBottomBarController(index: 0);
@@ -31,6 +33,7 @@ class _HomepageState extends State<Homepage> {
     _fetchUserData();
     getToken();
     _startListeningToNotifications(); // Use this method instead of the previous fetch method
+    loadData();
   }
 
   @override
@@ -38,6 +41,18 @@ class _HomepageState extends State<Homepage> {
     _notificationSubscription
         ?.cancel(); // Clean up the subscription when the widget is disposed
     super.dispose();
+  }
+
+  Future<void> loadData() async {
+    if (user != null) {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user!.uid)
+          .get();
+      setState(() {
+        userData = userDoc.data();
+      });
+    }
   }
 
   getToken() async {

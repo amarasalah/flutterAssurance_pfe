@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
@@ -22,5 +24,20 @@ class NotificationService {
       platformChannelSpecifics,
       payload: 'submission',
     );
+  }
+}
+
+class NotificationService1 {
+  static Future<void> sendNotification(
+      {required String title, required String message}) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      await FirebaseFirestore.instance.collection('notifications').add({
+        'userId': user.uid,
+        'title': title,
+        'message': message,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    }
   }
 }

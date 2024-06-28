@@ -5,39 +5,31 @@ import '../controllers/health_insurance_controller.dart';
 
 class SummaryStepView extends StatelessWidget {
   final HealthInsuranceController controller;
+  final void Function(String option) onChoosePaymentOption;
 
-  SummaryStepView({required this.controller});
-
-  Future<Map<String, dynamic>> _fetchUserData() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      DocumentSnapshot userData = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-      return userData.data() as Map<String, dynamic>;
-    } else {
-      throw Exception("User not logged in");
-    }
-  }
+  SummaryStepView(
+      {required this.controller, required this.onChoosePaymentOption});
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: _fetchUserData(),
-      builder: (context, snapshot) {
+    User? user = FirebaseAuth.instance.currentUser;
+    return FutureBuilder<DocumentSnapshot>(
+      future:
+          FirebaseFirestore.instance.collection('users').doc(user?.uid).get(),
+      builder:
+          (BuildContext context, AsyncSnapshot<DocumentSnapshot> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
         } else if (snapshot.hasError) {
           return Center(child: Text('Error fetching user data'));
-        } else if (!snapshot.hasData) {
+        } else if (!snapshot.hasData || !snapshot.data!.exists) {
           return Center(child: Text('No user data found'));
         } else {
-          var userData = snapshot.data!;
-          var dobController = userData['birthdate'] ?? 'N/A';
-          var fullnameController = userData['fullname'] ?? 'N/A';
-          var nationalIdController = userData['nationalId'] ?? 'N/A';
-          var phoneController = userData['phone'] ?? 'N/A';
+          var userData = snapshot.data!.data() as Map<String, dynamic>;
+          var dobController = userData['birthdate'] ?? '';
+          var fullnameController = userData['fullname'] ?? '';
+          var nationalIdController = userData['nationalId'] ?? '';
+          var phoneController = userData['phone'] ?? '';
           var selectedCountry = userData['country'] ?? 'Tunis';
 
           return Padding(
@@ -45,10 +37,9 @@ class SummaryStepView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Summary',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
+                Text('Summary',
+                    style:
+                        TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
                 SizedBox(height: 20),
                 _buildSummaryItem('Name:', fullnameController),
                 _buildSummaryItem('National ID:', nationalIdController),
@@ -62,10 +53,43 @@ class SummaryStepView extends StatelessWidget {
                 _buildSummaryItem('Marital Status:', controller.selectedOption),
                 _buildSummaryItem(
                     'Total:', controller.calculateTotal().toString()),
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () => _showPaymentOptionDialog(context),
+                  child: Text('Next'),
+                ),
               ],
             ),
           );
         }
+      },
+    );
+  }
+
+  void _showPaymentOptionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Choose Payment Option'),
+          content: Text('Would you like to pay online or get an invoice?'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('Pay Online'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                onChoosePaymentOption('pay_online');
+              },
+            ),
+            TextButton(
+              child: Text('Get Invoice'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                onChoosePaymentOption('get_invoice');
+              },
+            ),
+          ],
+        );
       },
     );
   }

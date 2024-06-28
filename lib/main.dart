@@ -224,9 +224,26 @@ class _MyAppContentState extends State<MyAppContent> {
         "historique": (context) => HistoriqueScreen(),
         "health": (context) => HealthInsuranceView(),
         "life": (context) => LifeInsuranceView(),
-        "/home": (context) => HomeInsuranceView(),
+        "home": (context) => HomeInsuranceView(),
         "car": (context) => CarInsuranceView(),
-        "/notifications": (context) => NotificationScreen(),
+        "notifications": (context) => NotificationScreen(),
+      },
+      onGenerateRoute: (settings) {
+        if (settings.name == '/payment') {
+          final args = settings.arguments as Map<String, dynamic>;
+          return MaterialPageRoute(
+            builder: (context) {
+              return StripePaymentPage(
+                total: args['total'],
+                controller: args['controller'],
+              );
+            },
+          );
+        }
+        return null;
+      },
+      onUnknownRoute: (settings) {
+        return MaterialPageRoute(builder: (context) => Homepage());
       },
     );
   }

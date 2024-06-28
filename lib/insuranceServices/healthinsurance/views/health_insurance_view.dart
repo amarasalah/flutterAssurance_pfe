@@ -27,6 +27,37 @@ class _HealthInsuranceViewState extends State<HealthInsuranceView> {
     super.dispose();
   }
 
+  void _handlePaymentOption(String option) {
+    if (option == 'pay_online') {
+      setState(() {
+        _controller.nextPage();
+      });
+    } else if (option == 'get_invoice') {
+      _showInvoiceDialog();
+    }
+  }
+
+  void _showInvoiceDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Invoice Number'),
+          content: Text('Your invoice number is: INV123456789'),
+          actions: <Widget>[
+            TextButton(
+              child: Text('OK'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).popUntil((route) => route.isFirst);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,10 +100,14 @@ class _HealthInsuranceViewState extends State<HealthInsuranceView> {
                     controller: _controller,
                   ),
                   FormStepView(controller: _controller),
-                  SummaryStepView(controller: _controller),
+                  SummaryStepView(
+                    controller: _controller,
+                    onChoosePaymentOption: _handlePaymentOption,
+                  ),
                   StripePaymentPage(
-                      total: _controller.calculateTotal(),
-                      controller: _controller),
+                    total: _controller.calculateTotal(),
+                    controller: _controller,
+                  ),
                 ],
               ),
             ),
@@ -97,21 +132,23 @@ class _HealthInsuranceViewState extends State<HealthInsuranceView> {
                         ),
                       ),
                     ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                          foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(horizontal: 30),
+                  if (_controller.currentPage <
+                      5) // Only show the Next button if not on the last page
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            foregroundColor: Colors.white,
+                            padding: EdgeInsets.symmetric(horizontal: 30),
+                          ),
+                          onPressed: () =>
+                              setState(() => _controller.nextPage()),
+                          child: Text('Next'),
                         ),
-                        onPressed: () => setState(() => _controller.nextPage()),
-                        child: Text(
-                            _controller.currentPage < 5 ? 'Next' : 'Pay Now'),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),

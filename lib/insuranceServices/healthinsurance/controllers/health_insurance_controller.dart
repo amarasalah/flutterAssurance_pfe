@@ -123,7 +123,7 @@ class HealthInsuranceController {
     return total;
   }
 
-  void submitData() async {
+  Future<void> submitData() async {
     formData['name'] = nameController.text;
     formData['age'] = ageController.text;
     formData['selectedOption'] = selectedOption;

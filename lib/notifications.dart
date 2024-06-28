@@ -10,6 +10,24 @@ class _NotificationScreenState extends State<NotificationScreen> {
   int _selectedIndex = 0;
 
   @override
+  void initState() {
+    super.initState();
+    _markAllNotificationsAsRead();
+  }
+
+  Future<void> _markAllNotificationsAsRead() async {
+    final QuerySnapshot snapshot =
+        await FirebaseFirestore.instance.collection('notifications').get();
+
+    final WriteBatch batch = FirebaseFirestore.instance.batch();
+    for (final DocumentSnapshot doc in snapshot.docs) {
+      batch.update(doc.reference, {'isRead': true});
+    }
+
+    await batch.commit();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -51,7 +69,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
             ),
           ),
           Expanded(
-            child: StreamBuilder(
+            child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
                   .collection('notifications')
                   .snapshots(),
@@ -59,6 +77,7 @@ class _NotificationScreenState extends State<NotificationScreen> {
                 if (!snapshot.hasData) {
                   return Center(child: CircularProgressIndicator());
                 }
+
                 var notifications = snapshot.data!.docs
                     .map((doc) => NotificationItem.fromDocument(doc))
                     .toList();
@@ -81,14 +100,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
                   itemCount: currentNotifications.length,
                   itemBuilder: (context, index) {
                     var notification = currentNotifications[index];
-
-                    // Update Firestore document to mark as read
-                    if (!notification.isRead) {
-                      FirebaseFirestore.instance
-                          .collection('notifications')
-                          .doc(notification.id)
-                          .update({'isRead': true});
-                    }
 
                     return Card(
                       margin:
@@ -175,14 +186,17 @@ class NotificationItem {
   });
 
   factory NotificationItem.fromDocument(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String,
+        dynamic>?; // Typecast the data to Map<String, dynamic> and handle nullability
     return NotificationItem(
       id: doc.id,
-      title: doc['title'],
-      description: doc['body'],
-      icon: Icons.notifications, // you can change this according to your data
-      color: Colors.blue, // you can change this according to your data
-      isRead: doc['isRead'] ?? false,
-      status: doc['status'],
+      title: data?['title'] ??
+          'No Title', // Using the null-aware operator to provide default values
+      description: data?['body'] ?? 'No Description',
+      icon: Icons.notifications, // Customize this based on your data
+      color: Colors.blue, // Customize this based on your data
+      isRead: data?['isRead'] ?? false,
+      status: data?['status'],
     );
   }
 }
